@@ -15,7 +15,8 @@ import torch.optim as optim
 # ---------------------- Create the Environment --------------------
 
 # Create the fozen lake environment
-env = gym.make("FrozenLake-v1")
+
+env = gym.make("LunarLander-v2")
 
 # reset the intial state of the environment
 state = env.reset()
@@ -30,10 +31,41 @@ env.close()
 
 # ---------------------- Create the Network --------------------
 
-DI = env.state_space.shape()
+DI = 8
 
-DO = env.action_space.shape()
+DO = 4
 
 network = Network(dim_input=DI, dim_output=DO)
 
 optimizer  = optim.Adam(network.parameters(), lr=0.0001)
+
+# ---------------------- Learning the Policy --------------------
+
+num_episodes = 1000
+
+for episode in range(1, num_episodes):
+    
+    state, reward, done, info = env.reset()
+    
+    done = False
+    
+    while not done:
+        
+        action = select_action(network, state)
+        
+        next_state, reward, terminate, truncate, _ = (env.step(action))
+        
+        done = terminate or truncate
+        
+        loss = calculate_loss(network, state, action, next_state, reward, done)
+        
+        optimizer.zero_grad()
+        
+        loss.backward()
+        
+        optimizer.step()
+        
+        state = next_state
+        
+        
+        
